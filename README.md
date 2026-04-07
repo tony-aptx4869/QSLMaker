@@ -9,4 +9,4 @@ Change code for whatever you want.
 python3 qslmaker.py
 
 ## Example Output:
-![Example Output](https://raw.githubusercontent.com/scottkuma/QSLMaker/main/out/bg7gg_20260404_205515.jpg)
+![Example Output](https://raw.githubusercontent.com/tony-aptx4869/QSLMaker/main/out/bg7gg_20260404_205515.jpg)
