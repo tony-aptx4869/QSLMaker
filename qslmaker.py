@@ -1,5 +1,4 @@
 import adif_io as aio
-import pprint
 from PIL import Image, ImageDraw, ImageFont
 import os
 
@@ -13,102 +12,96 @@ def slugify(value):
     #value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
     value = str(re.sub('[^\w\s-]', '', value).strip().lower())
     value = str(re.sub('[-\s]+', '-', value))
-    # ...
     return value
 
 def drawCenteredText(text, textarea, font_in, font_color='rgb(0,0,0)'):
     #returns a two-tuple (x,y) location for text.
     #note: ONLY CENTERS HORIZONTALLY at this time
-    w, h = draw.textsize(text, font=font_in)
+    bbox = draw.textbbox((0, 0), text, font=font_in)
+    w = bbox[2] - bbox[0]
+    h = bbox[3] - bbox[1]
     x = ((textarea['size'][0] - w)/2) + textarea['offset'][0]
     y = ((textarea['size'][1] - h)/2) + textarea['offset'][1]
-
     draw.text((x,y), text, font=font_in, fill=font_color)
 
+fontfile = 'fonts/RobotoCondensed-Regular.ttf'
+font = ImageFont.truetype(fontfile, size=73)
+boldfontfile = 'fonts/RobotoCondensed-Bold.ttf'
+call_font = ImageFont.truetype(boldfontfile, size=93)
+bold_font = ImageFont.truetype(boldfontfile, size=73)
+bolditalicfontfile = 'fonts/RobotoCondensed-BoldItalic.ttf'
+bolditalic_font = ImageFont.truetype(boldfontfile, size=73)
+rst_font = ImageFont.truetype(fontfile, size=49)
+sig_font = ImageFont.truetype(bolditalicfontfile, size=73)
 
-fontfile = 'Roboto/Roboto-Regular.ttf'
-font = ImageFont.truetype(fontfile, size=72)
+imageinfo = [ {
+    'filename': 'cards/test_qsl-0407.jpg',
+    'fields': {
+        'to_radio': {'offset': (984.2, 140.6), 'size': (610.9, 100)},
+        'date': {'offset': (70.5, 354.3), 'size': (389.8, 100)},
+        'cst_time': {'offset': (495.7, 354.3), 'size': (236.2, 125)},
+        'time': {'offset': (767.1, 354.3), 'size': (236.2, 100)},
+        'freq': {'offset': (1037.7, 354.3), 'size': (236.2, 100)},
+        'mode': {'offset': (1310, 354.3), 'size': (272.7, 100)},
+        'rst': {'offset': (1040.3, 519.7), 'size': (236.2, 100)},
+        'rig_ant': {'offset': (70.9, 519.7), 'size': (661.7, 100)},
+        'pwr': {'offset': (768.2, 519.7), 'size': (236.2, 100)},
+        'cfm_qso': {'offset': (1377.2, 263.4), 'size': (219, 9)},
+        'cfm_rpt': {'offset': (1198.2, 263.4), 'size': (171, 9)},
+        'pse_qsl': {'offset': (1337.5, 575.6), 'size': (219, 9)},
+        'tnx_qsl': {'offset': (1337.5, 520), 'size': (219, 9)},
+        'rmks': {'offset': (70.9, 685), 'size': (1511.8, 271.7)},
+        'op': {'offset': (1199, 986), 'size': (381, 158)},
+        } }
+    ]
 
-boldfontfile = 'Roboto/Roboto-Black.ttf'
-bold_font = ImageFont.truetype(boldfontfile, size=72)
+card_no = 0
+qso_flag = True
+# qso_flag = False
+pse_flag = True
+# pse_flag = False
+adif_file = 'tony.adi'
+sig_img = Image.open('cards/tony_sign.png')
 
-freq_font = ImageFont.truetype(fontfile, size=60)
-
-sigfontfile = 'Autography/Autography.otf'
-sig_font = ImageFont.truetype(sigfontfile, size=72)
-
-imageinfo = [{'filename': '20081010-DigitalQSL.jpg',
-             'fields':{
-                 'to_radio': {'offset':(100,754), 'size':(350,108)},
-                 'date_d': {'offset':(456, 754), 'size':(116,108)},
-                 'date_m': {'offset':(578, 754), 'size':(104,108)},
-                 'date_y': {'offset':(689, 754), 'size':(126,108)},
-                 'time_on': {'offset':(823,754), 'size':(218,108)},
-                 'freq': {'offset':(1046, 754), 'size':(260,108)},
-                 'mode': {'offset':(1314, 754), 'size':(214,108)},
-                 'rst': {'offset':(1538,754), 'size':(185,108)},
-                 'confirm_qso': {'offset':(1141, 495), 'size':(52,52)},
-                 'pse_qsl': {'offset':(82, 498), 'size':(52,52)},
-                 '73': {'offset':(1196, 895), 'size':(518,107)}
-                 }},
-             {'filename': '20081010-GenericQSL.jpg',
-             'fields':{
-                 'to_radio': {'offset':(100,754), 'size':(350,108)},
-                 'date_d': {'offset':(456, 754), 'size':(116,108)},
-                 'date_m': {'offset':(578, 754), 'size':(104,108)},
-                 'date_y': {'offset':(689, 754), 'size':(126,108)},
-                 'time_on': {'offset':(823,754), 'size':(218,108)},
-                 'freq': {'offset':(1046, 754), 'size':(260,108)},
-                 'mode': {'offset':(1314, 754), 'size':(214,108)},
-                 'rst': {'offset':(1538,754), 'size':(185,108)},
-                 'confirm_qso': {'offset':(1130, 501), 'size':(52,52)},
-                 'pse_qsl': {'offset':(90, 498), 'size':(52,52)},
-                 '73': {'offset':(1250, 880), 'size':(518,160)}
-                 }}
-             ]
-
-CARDNO = 1
-fields = imageinfo[CARDNO]['fields']
-
-adif_file = "wsjtx_log_ORIG.adi"
+fields = imageinfo[card_no]['fields']
 adif = aio.read_from_file(adif_file)
 
-sig_img = Image.open("Scott_Trans.png")
-ratio =  sig_img.height / fields['73']['size'][1]
+ratio =  sig_img.height / fields['op']['size'][1]
 (im_w, im_h) = (int(sig_img.width // ratio), int(sig_img.height // ratio))
 sig_img_r = sig_img.resize((im_w, im_h))
 
 black = 'rgb(0,0,0)'
 red = 'rgb(255,0,0)'
+darkred = 'rgb(201,29,29)'
 blue= 'rgb(0,0,255)'
 
 for qso in adif[0]:
     print(f"Working on {qso['CALL']}")
-    image = Image.open(imageinfo[CARDNO]['filename'])
-
-    #print(fields)
+    image = Image.open(imageinfo[card_no]['filename'])
     draw = ImageDraw.Draw(image)
-    #Call
-
-    drawCenteredText(qso['CALL'], fields['to_radio'], bold_font, black)
-
-    #QSO date
+    # CALL
+    drawCenteredText(qso['CALL'], fields['to_radio'], call_font, black)
+    #QSO DATE
     day = qso['QSO_DATE'][-2:]
     month = qso['QSO_DATE'][4:6]
-    year = qso['QSO_DATE'][2:4]
-
-
-    drawCenteredText(day, fields['date_d'], bold_font, black)
-    drawCenteredText(month, fields['date_m'], bold_font, black)
-    drawCenteredText(year, fields['date_y'], bold_font, black)
-
-    #QSO time_on
-    time_on = qso['TIME_ON'][:2] + ":" + qso['TIME_ON'][2:4]
-    drawCenteredText(time_on, fields['time_on'], bold_font, black)
+    year = qso['QSO_DATE'][0:4]
+    date = "{}-{}-{}".format(year, month, day)
+    drawCenteredText(date, fields['date'], bold_font, black)
+    #QSO Time ON
+    hours = int(qso['TIME_ON'][:2])
+    minutes = int(qso['TIME_ON'][2:4])
+    cst_hours = (hours + 8) % 24
+    cst_date_flag = True if hours + 8 > 23 \
+        else False
+    time = f"{hours:02d}:{minutes:02d}"
+    cst_time = f"(+0){cst_hours:02d}:{minutes:02d}" if not cst_date_flag \
+        else f"(+1){cst_hours:02d}:{minutes:02d}"
+    drawCenteredText(cst_time, fields['cst_time'], bold_font, black)
+    drawCenteredText(time, fields['time'], bold_font, black)
 
     #QSO Frequency
-    freq = qso['FREQ'][:8]
-    drawCenteredText(freq, fields['freq'], freq_font, red)
+    freq = qso['FREQ'][:7]
+    drawCenteredText(freq, fields['freq'], bold_font, darkred)
 
     #QSO mode
     qso_mode = qso['MODE']
@@ -118,16 +111,22 @@ for qso in adif[0]:
     rst = qso['RST_SENT']
     drawCenteredText(rst, fields['rst'], bold_font, black)
 
-    #confirm QSO
-    drawCenteredText('x', fields['confirm_qso'], bold_font, red)
+    #RIG & ANT & PWR
+    rig_ant = '{}, {}'.format(qso['MY_RIG'], qso['MY_ANTENNA'])
+    drawCenteredText(rig_ant, fields['rig_ant'], bold_font, black)
+    pwr = qso['TX_PWR']
+    drawCenteredText(pwr, fields['pwr'], bold_font, darkred)
 
-    #pse QSL
+    #Confirming QSO or UR RPT
+    drawCenteredText('-------', fields['cfm_qso'] if qso_flag else fields['cfm_rpt'], bold_font, darkred)
+    #PSE/PLS or TNX QSL
     #draw.text(imageinfo['pse_qsl'], 'x', fill=red, font=bold_font)
-    drawCenteredText('x', fields['pse_qsl'], bold_font, red)
+    drawCenteredText('-------', fields['pse_qsl'] if pse_flag else fields['tnx_qsl'], bold_font, darkred)
 
-    #73
-    #drawCenteredText('de Scott N8VSI', fields['73'], sig_font, blue)
-    image.paste(sig_img_r,fields['73']['offset'],mask=sig_img_r)
+    #rmks
+    # drawCenteredText('de Scott N8VSI', fields['73'], sig_font, blue)
+    #op
+    # image.paste(sig_img_r, fields['op']['offset'], mask = sig_img_r)
 
     filecall = slugify(qso['CALL'])
     filedatetime = str(qso['QSO_DATE'][:4])+str(month)+str(day) + '_' + str(qso['TIME_ON'])
